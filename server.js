@@ -6,6 +6,7 @@ let locations = {};
 const express = require('express');
 const cors = require('cors');
 const superagent = require('superagent');
+const pg = require('pg');
 
 //Load environment vars from .env file
 require('dotenv').config();
@@ -14,6 +15,11 @@ require('dotenv').config();
 let PORT = process.env.PORT || 3005;
 const app = express();
 app.use( cors() );
+
+//Database Setup
+const client = new pg.Client(process.env.DATABASE_URL);
+
+client.on('error', err => console.log(err));
 
 //Listen for requests
 app.listen( PORT, () => console.log(`Listening on port ${PORT}`));
