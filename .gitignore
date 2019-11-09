@@ -66,3 +66,6 @@ tags
 
 # Environment variables
 .env
+
+#json
+package-lock.json
