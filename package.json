@@ -1,0 +1,21 @@
+{
+  "name": "301CityX",
+  "version": "1.0.0",
+  "description": "City Explorer",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/astrokd/301CityX.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/astrokd/301CityX/issues"
+  },
+  "homepage": "https://github.com/astrokd/301CityX#readme"
+}
