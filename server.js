@@ -18,7 +18,7 @@ app.use( cors() );
 
 //Database Setup
 const client = new pg.Client(process.env.DATABASE_URL);
-
+client.connect();
 client.on('error', err => console.log(err));
 
 //Listen for requests
@@ -40,11 +40,11 @@ function helloWorld(req, res) {
 function getLocation(req, res) {
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${req.query.data}&key=${process.env.GEOCODE_API_KEY}`;
 
-  console.log('[url]',[url]);
+  console.log('in getLocation');
 
   if (locations[url]) {
     res.send(locations[url]);
-    console.log('locations',locations[url]);
+    console.log('locations from memory');
   }
   else {
     console.log(req.query.data);
@@ -69,7 +69,7 @@ function notFoundHandler(req, res) {
 
 function errorHandler(error, req, res) {
   console.error(error);
-  console.error(req.query.data);
+  // console.error(req.query.data);
   res.status(500).send(error);
 }
 
