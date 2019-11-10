@@ -87,8 +87,23 @@ Location.prototype.writeToDB = function() {
   console.log('in writeToDB');
   return client.query(SQL, values)
     .then(result => {
-      console.log(result);
+      // console.log(result);
       this.id = result.rows[0].id;
       return this;
     });
+};
+
+Location.prototype.readFromDB = function(location) {
+  const SQL = `SELECT * FROM locations WHERE search_query=$1;`;
+  const values = [location.query];
+
+  return client.query(SQL, values)
+    .then(result => {
+      if (result.rowCount > 0) {
+        location.cacheHit(result);
+      } else {
+        location.cacheMiss();
+      }
+    })
+    .catch(console.error);
 };
