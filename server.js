@@ -16,7 +16,7 @@ let PORT = process.env.PORT || 3005;
 const app = express();
 app.use( cors() );
 
-//Database Setup
+//Database Connection Setup
 const client = new pg.Client(process.env.DATABASE_URL);
 client.connect();
 client.on('error', err => console.log(err));
@@ -29,8 +29,6 @@ app.get('/helloworld', helloWorld);
 app.get('/location',getLocation);
 app.use('*', notFoundHandler);
 app.use(errorHandler);
-
-
 
 //Handlers
 function helloWorld(req, res) {
@@ -47,20 +45,22 @@ function getLocation(req, res) {
     console.log('locations from memory');
   }
   else {
-    console.log(req.query.data);
+    console.log('line48',req.query.data);
     superagent.get(url)
       .then(data => {
         const geoData = data.body;
         const newLocation = new Location(req.query.data, geoData);
         locations[url] = newLocation;
-        res.send(newLocation);
+        console.log(newLocation);
+        newLocation.writeToDB()
+          .then(newLocation => res.send(newLocation));
       })
       .catch(() => {
         errorHandler('Error in route', req, res);
       });
+    //write to db
   }
 }
-
 
 // errors
 function notFoundHandler(req, res) {
@@ -69,14 +69,26 @@ function notFoundHandler(req, res) {
 
 function errorHandler(error, req, res) {
   console.error(error);
-  // console.error(req.query.data);
   res.status(500).send(error);
 }
 
 //Constructor Functions
 function Location(query, geoData) {
+  this.tablename = 'locations';
   this.search_query = query;
-  this.formatted_query = geoData.results[0].formatted_address;
+  this.formatted_address = geoData.results[0].formatted_address;
   this.latitude = geoData.results[0].geometry.location.lat;
   this.longitude = geoData.results[0].geometry.location.lng;
 }
+
+Location.prototype.writeToDB = function() {
+  const SQL = `INSERT INTO locations (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING RETURNING id;`;
+  const values = [this.search_query, this.formatted_address, this.latitude, this.longitude];
+  console.log('in writeToDB');
+  return client.query(SQL, values)
+    .then(result => {
+      console.log(result);
+      this.id = result.rows[0].id;
+      return this;
+    });
+};
