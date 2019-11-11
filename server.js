@@ -7,7 +7,6 @@
 // https://github.com/astrokd/lab-07-back-end
 
 // Global Variables
-let locations = {};
 
 //App Dependencies
 const express = require('express');
@@ -49,47 +48,26 @@ function getLocation(req, res) {
   // Check if search results are in DB
   readFromDB(req.query.data.toLowerCase())
     .then( data => {
-      console.log('then',data);
       if (data.rowCount > 0) {
+        console.log('res send from db');
         res.send(data.rows[0]);
       }
       else {
+        // Get data from API
         superagent.get(url)
           .then(data => {
             const geoData = data.body;
             const newLocation = new Location(req.query.data.toLowerCase(), geoData);
+            console.log('res send from api');
             res.send(newLocation);
-            // locations[url] = newLocation;
-            // console.log(newLocation);
             newLocation.writeToDB()
-              .then(writeLocation => console.log('writeLocation',writeLocation));
+              .then(writeLocation => console.log('writeLocation',writeLocation.rows[0].id));
           })
           .catch(() => {
             errorHandler('Error in route', req, res);
           });
       }
     })
-
-  // if (locations[url]) {
-  //   // res.send(locations[url]);
-  //   // console.log('locations from memory');
-  // }
-  // else {
-  //   // console.log('superagent get',req.query.data);
-  //   superagent.get(url)
-  //     .then(data => {
-  //       const geoData = data.body;
-  //       const newLocation = new Location(req.query.data.toLowerCase(), geoData);
-  //       locations[url] = newLocation;
-  //       // console.log(newLocation);
-  //       newLocation.writeToDB()
-  //         .then(newLocation => res.send(newLocation));
-  //     })
-  //     .catch(() => {
-  //       errorHandler('Error in route', req, res);
-  //     });
-  //   //write to db
-  // }
 }
 
 // errors
@@ -114,26 +92,14 @@ function Location(query, geoData) {
 Location.prototype.writeToDB = function() {
   const SQL = `INSERT INTO locations (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING RETURNING id;`;
   const values = [this.search_query, this.formatted_address, this.latitude, this.longitude];
-  // console.log('in writeToDB');
+  console.log('in writeToDB',this.search_query);
   return client.query(SQL, values);
-  // .then(result => {
-  //   // console.log(result);
-  //   this.id = result.rows[0].id;
-  //   console.log('then writeToDB',this.search_query,result);
-  //   return this;
-  // });
 };
 
-// Location.prototype.readFromDB = function(location) {
 function readFromDB(location) {
   const SQL = `SELECT * FROM locations WHERE search_query=$1;`;
-  // console.log('location.query',location.query);
   const values = [location];
   console.log('in readFromDB',values);
   let db = client.query(SQL, values);
-  // console.log('db',db);
   return db;
-  // .then(result => {
-  //   console.log('then readFromDB',result.rows[0]);
-  // })
 }
